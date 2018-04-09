@@ -7,7 +7,9 @@ class Indexer
   end
 
   def start_indexing
-    raise NotImplementedError
+    @doc_datastore.each_document do |doc|
+      puts doc.url
+    end
   end
 
 end
