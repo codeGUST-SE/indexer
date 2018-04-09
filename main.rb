@@ -1,5 +1,5 @@
 require 'optparse'
-require_relative 'db/sample_document_datastore'
+require_relative 'db/document_datastore'
 require_relative 'db/sample_document_datastore'
 require_relative 'indexer'
 
