@@ -2,6 +2,7 @@ require_relative 'db/document_datastore'
 
 class Indexer
 
+  # doc_datastore: DocumentDatastore object 
   def initialize(doc_datastore)
     @doc_datastore = doc_datastore
   end
