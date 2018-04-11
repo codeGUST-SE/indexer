@@ -5,7 +5,7 @@ require_relative 'document_entity'
 class DocumentDatastore
 
   DOCUMENT_KIND = {'DEV' => 'page_dev', 'PROD' => 'page'}
-
+  LIMIT = 10
   def initialize(env)
     @@datastore ||= Google::Cloud::Datastore.new(project_id: 'codegust')
     @env = env
@@ -15,15 +15,14 @@ class DocumentDatastore
   end
 
   def each_document
-    largest_timestamp = Time.now.to_i
+    offset = 0
     while true do
       query = @@datastore.query(@document_kind)
-                         .where('timestamp', '<', largest_timestamp)
-                         .order('timestamp', :desc)
-                         .limit(1)
+                         .offset(offset)
+                         .limit(LIMIT)
 
+      offset += LIMIT
       @@datastore.run(query).each do |doc|
-        largest_timestamp = doc['timestamp']
         yield DocumentEntity.new(doc['page_url'], doc['page_title'],
                                  doc['page_scores'], doc['page_html'])
       end .empty? and begin
