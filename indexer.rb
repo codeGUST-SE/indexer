@@ -8,7 +8,10 @@ class Indexer
   end
 
   def start_indexing
+    # count = 0 DEBUG
     @doc_datastore.each_document do |doc|
+      # count += 1 DEBUG
+      # puts count DEBUG
       puts doc.url
     end
   end

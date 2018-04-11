@@ -6,9 +6,10 @@ class DocumentDatastore
 
   DOCUMENT_KIND = {'DEV' => 'page_dev', 'PROD' => 'page'}
   LIMIT = 100
+
   def initialize(env)
     @@datastore ||= Google::Cloud::Datastore.new(project_id: 'codegust')
-    @env = envs
+    @env = env
     # TODO remove this check in the future
     raise NotImplementedError if @env == 'PROD'
     @document_kind = DOCUMENT_KIND[@env]
