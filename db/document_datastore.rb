@@ -5,7 +5,7 @@ require_relative 'document_entity'
 class DocumentDatastore
 
   DOCUMENT_KIND = {'DEV' => 'page_dev', 'PROD' => 'page'}
-  INDEX_KIND = {'DEV' => 'in_dev', 'PROD' => 'in'}
+  INDEX_KIND = {'DEV' => 'index_dev', 'PROD' => 'index'}
 
   def initialize(env)
     @@datastore ||= Google::Cloud::Datastore.new(project_id: 'codegust')
