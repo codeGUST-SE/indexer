@@ -8,13 +8,15 @@ class Indexer
   # doc_datastore: DocumentDatastore object
   def initialize(doc_datastore)
     @doc_datastore = doc_datastore
-    @limit = 100
+    @limit = 1
   end
 
   def start_indexing
     hashmap = Hash.new(0)
+    count = 0
     while true
       request_docs = @doc_datastore.query(@limit)
+      count += 1
       break if request_docs.empty?
       request_docs.pmap do |doc|
         index_list = get_index_list(doc.html)
@@ -24,7 +26,9 @@ class Indexer
           hashmap[word] << doc.url
         end
       end
-
+      break if count == 2
+    end
+    puts hashmap
   end
 
   private
