@@ -12,17 +12,18 @@ class Indexer
   end
 
   def start_indexing
-    index_hash = Hash.new(0)
     while true
       request_docs = @doc_datastore.query(@limit)
       break if request_docs.empty?
       request_docs.pmap do |doc|
+        index_hash = Hash.new(0)
         stem_list, index_list = get_index_list(doc.html)
         index_list.each do |word|
           index_hash[word] = {} if !index_hash.has_key?(word)
           pos_list = stem_list.each_index.select{|i| stem_list[i] == word}
           index_hash[word][doc.url] = pos_list
         end
+        @doc_datastore.add_indexes(index_hash)
       end
     end
   end
