@@ -8,7 +8,7 @@ class Indexer
   # doc_datastore: DocumentDatastore object
   def initialize(doc_datastore)
     @doc_datastore = doc_datastore
-    @limit = 1
+    @limit = 10
   end
 
   def start_indexing
