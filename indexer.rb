@@ -1,20 +1,30 @@
 require_relative 'db/document_datastore'
-require 'set'
+require_relative 'enumerable'
 require 'fast_stemmer'
+require 'set'
 
 class Indexer
 
   # doc_datastore: DocumentDatastore object
   def initialize(doc_datastore)
     @doc_datastore = doc_datastore
+    @limit = 100
   end
 
   def start_indexing
-    @doc_datastore.each_document do |doc|
-      index_list = get_index_list(doc.html)
-      puts doc.url
-      puts index_list
-    end
+    hashmap = Hash.new(0)
+    while true
+      request_docs = @doc_datastore.query(@limit)
+      break if request_docs.empty?
+      request_docs.pmap do |doc|
+        index_list = get_index_list(doc.html)
+        index_list.each do |word|
+          # TODO add to Datastore instead of hashmap
+          hashmap[word] = [] if hashmap.has_key?(word) == false
+          hashmap[word] << doc.url
+        end
+      end
+
   end
 
   private

@@ -9,11 +9,12 @@ class SampleDocumentDatastore
     @filepath = filepath
   end
 
-  def each_document
+  def query(limit)
+    return_value = []
     File.readlines(@filepath).each do |line|
-      doc = DocumentEntity.new(*(line.strip().split("\t")))
-      yield(doc)
+      return_value << DocumentEntity.new(*(line.strip().split("\t")))
     end
+    return_value
   end
-
+  
 end
