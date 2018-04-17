@@ -6,13 +6,16 @@ class DocumentDatastore
 
   DOCUMENT_KIND = {'DEV' => 'page_dev', 'PROD' => 'page'}
   LIMIT = 100
+  attr_reader :query_done
 
   def initialize(env)
     @@datastore ||= Google::Cloud::Datastore.new(project_id: 'codegust')
     @env = env
     # TODO remove this check in the future
-    raise NotImplementedError if @env == 'PROD'
+    # raise NotImplementedError if @env == 'PROD'
     @document_kind = DOCUMENT_KIND[@env]
+    @query_done = false
+    @largest_timestamp = Time.now.to_i
   end
 
   def each_document

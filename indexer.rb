@@ -1,4 +1,6 @@
 require_relative 'db/document_datastore'
+require 'set'
+require 'fast_stemmer'
 
 class Indexer
 
@@ -8,18 +10,31 @@ class Indexer
   end
 
   def start_indexing
-    # count = 0 DEBUG
     @doc_datastore.each_document do |doc|
-      # count += 1 DEBUG
-      # puts count DEBUG
+      index_list = get_index_list(doc.html)
       puts doc.url
+      puts index_list
     end
   end
 
   private
-  
+
+  def get_index_list(page_html)
+    word_set = Set.new
+    word_list = remove_nonalpha(page_html).split()
+    word_list.each do |word|
+      word_set.add(get_stem(word))
+    end
+    word_set.to_a
+  end
+
   def remove_nonalpha(page_html)
-    page_html.gsub(/[^a-z ]/i, '')
+    page_html.gsub(/[^a-z ]/i, ' ')
+  end
+
+  def get_stem(word)
+    # TODO return nil is the word is not a valid English word?
+    Stemmer::stem_word(word.downcase)
   end
 
 end
