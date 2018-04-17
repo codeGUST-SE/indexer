@@ -36,22 +36,24 @@ class DocumentDatastore
     index_hash.each_key do |index|
       # get the current entity if it exists
       entity_key = @@datastore.key @index_kind, index
-      current_value = @@datastore.find entity_key
+      entity = @@datastore.find(entity_key)
+      current_hash = entity == nil ? {} : eval(entity['value'])
 
       # create new entity or update the existing one
-      entity = @@datastore.entity @index_kind, index do |t|
-        t['value'] = compute_index_value(current_value, index_hash[index])
+      new_entity = @@datastore.entity @index_kind, index do |t|
+        t['value'] = compute_index_value(current_hash, index_hash[index])
         t.exclude_from_indexes! 'value', true
       end
-      @@datastore.save entity
+      @@datastore.save new_entity
     end
   end
 
   private
 
-  # Computes the index value given the current_value and the new value.
-  def compute_index_value(a, b)
-    raise NotImplementedError
+  # Computes the new index value given the current_hash and the new_hash.
+  # TODO: Implement top k pruning
+  def compute_index_value(current_hash, new_hash)
+    current_hash.merge(new_hash).to_s
   end
 
 end
