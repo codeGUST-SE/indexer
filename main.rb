@@ -26,8 +26,10 @@ begin
     Indexer.new(db, options[:batch]).start_indexing()
   }
   Log.benchmark("#{Time.now.to_i}\t#{options[:batch]}\t#{benchmark}")
+  Log::LOGGER.debug('Done!')
 rescue Exception => e
   Log::LOGGER.fatal(e.message)
   Log::LOGGER.fatal(e.backtrace.inspect)
+  Log::LOGGER.debug('Failed!')
+  raise e
 end
-Log::LOGGER.debug('Done!')
