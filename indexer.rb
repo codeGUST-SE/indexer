@@ -1,4 +1,5 @@
 require_relative 'db/document_datastore'
+require_relative 'log/log'
 require_relative 'enumerable'
 require 'fast_stemmer'
 require 'set'
@@ -6,16 +7,17 @@ require 'set'
 class Indexer
 
   # doc_datastore: DocumentDatastore object
-  def initialize(doc_datastore)
+  def initialize(doc_datastore, batch_size)
     @doc_datastore = doc_datastore
-    @limit = 100
+    @batch_size = batch_size
   end
 
   def start_indexing
     while true
-      request_docs = @doc_datastore.query(@limit)
+      request_docs = @doc_datastore.query(@batch_size)
       break if request_docs.empty?
       request_docs.pmap do |doc|
+        Log::LOGGER.info('indexing') { "#{doc.url}" }
         index_hash = Hash.new(0)
         stem_list, index_list = get_index_list(doc.html)
         index_list.each do |word|
