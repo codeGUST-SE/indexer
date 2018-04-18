@@ -21,7 +21,8 @@ class Indexer
         index_list.each do |word|
           index_hash[word] = {} if !index_hash.has_key?(word)
           pos_list = stem_list.each_index.select{|i| stem_list[i] == word}
-          index_hash[word][doc.url] = pos_list
+          in_title = found_in_title(doc.title, word)
+          index_hash[word][doc.url] = [in_title, pos_list]
         end
         @doc_datastore.add_indexes(index_hash)
       end
@@ -29,6 +30,17 @@ class Indexer
   end
 
   private
+
+  # Returns 1 if the index is found in the title, 0 otherwise
+  def found_in_title(page_title, index)
+    title = remove_nonalpha(page_title).split()
+    title.each do |word|
+      if index == get_stem(word)
+        return 1
+      end
+    end
+    return 0
+  end
 
   def get_index_list(page_html)
     word_set = Set.new
