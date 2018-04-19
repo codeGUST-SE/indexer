@@ -5,7 +5,7 @@ require_relative 'db/sample_document_datastore'
 require_relative 'indexer'
 require_relative 'log/log'
 
-options = {:batch => 100}
+options = {:batch => 250}
 OptionParser.new do |opt|
   opt.on('--env ENV', 'PROD or DEV') { |o| options[:env] = o }
   opt.on('-b', '--batch_size BATCH', 'Datastore retrieval batch size, defaults to 100') { |o| options[:batch] = Integer(o) }
