@@ -13,8 +13,6 @@ class DocumentDatastore
   def initialize(env)
     @@datastore ||= Google::Cloud::Datastore.new(project_id: 'codegust')
     @env = env
-    # TODO remove this check in the future
-    raise NotImplementedError if @env == 'PROD'
     @document_kind = DOCUMENT_KIND[@env]
     @index_kind = INDEX_KIND[@env]
     @largest_timestamp = Time.now.to_i
