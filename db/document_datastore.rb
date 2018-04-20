@@ -7,7 +7,7 @@ class DocumentDatastore
   MAX_URL_LIST = 3000
 
   DOCUMENT_KIND = {'DEV' => 'page_dev', 'PROD' => 'page'}
-  INDEX_KIND = {'DEV' => 'in_dev', 'PROD' => 'index'}
+  INDEX_KIND = {'DEV' => 'index_dev', 'PROD' => 'index'}
 
   def initialize(env)
     @@datastore ||= Google::Cloud::Datastore.new(project_id: 'codegust')
