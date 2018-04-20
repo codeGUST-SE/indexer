@@ -1,5 +1,6 @@
 require 'google/cloud/datastore'
 require_relative 'document_entity'
+require_relative 'log/log'
 
 # DocumentDatastore connects to the Datastore in Google Cloud Platform.
 class DocumentDatastore
@@ -18,9 +19,11 @@ class DocumentDatastore
     @index_kind = INDEX_KIND[@env]
     @largest_timestamp = Time.now.to_i
     @offset_cache = {}  # TODO not threadsafe :(
+    Log::LOGGER.info('datastore') { "Initialized with largest_timestamp = #{@largest_timestamp}" }
   end
 
   def query(limit)
+    Log::LOGGER.info('datastore') { "Query with largest_timestamp = #{@largest_timestamp}" }
     documents = []
     query = @@datastore.query(@document_kind)
                          .where('timestamp', '<', @largest_timestamp)
@@ -37,8 +40,9 @@ class DocumentDatastore
 
   def add_indexes(index_hash)
     index_hash.each_key do |index|
-      current_hash, offset = get_current_hash(index)
+      Log::LOGGER.info('datastore') { "Adding index = #{index}" }
 
+      current_hash, offset = get_current_hash(index)
       new_index_value, remaining_index_value = compute_index_value(current_hash, index_hash[index])
 
       save(index + offset.to_s, new_index_value)
