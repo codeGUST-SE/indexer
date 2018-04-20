@@ -24,6 +24,7 @@ class DocumentDatastore
     Log::LOGGER.info('datastore') { "Query with largest_timestamp = #{@largest_timestamp}" }
     documents = []
     query = @@datastore.query(@document_kind)
+                         .where('timestamp', '>=', 1524223642)
                          .where('timestamp', '<', @largest_timestamp)
                          .order('timestamp', :desc)
                          .limit(limit)
@@ -61,7 +62,15 @@ class DocumentDatastore
       t['value'] = value
       t.exclude_from_indexes! 'value', true
     end
-    @@datastore.save new_entity
+
+    while true
+      begin
+        @@datastore.save new_entity
+        break
+      rescue # Deadline exceeded
+        sleep(1.minute)
+      end
+    end
   end
 
   def get_current_hash(index)
