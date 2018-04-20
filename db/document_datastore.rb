@@ -4,7 +4,7 @@ require_relative 'document_entity'
 # DocumentDatastore connects to the Datastore in Google Cloud Platform.
 class DocumentDatastore
 
-  MAX_URL_LIST = 4000
+  MAX_URL_LIST = 3000
 
   DOCUMENT_KIND = {'DEV' => 'page_dev', 'PROD' => 'page'}
   INDEX_KIND = {'DEV' => 'in_dev', 'PROD' => 'index'}
@@ -17,6 +17,7 @@ class DocumentDatastore
     @document_kind = DOCUMENT_KIND[@env]
     @index_kind = INDEX_KIND[@env]
     @largest_timestamp = Time.now.to_i
+    @offset_cache = {}  # TODO not threadsafe :(
   end
 
   def query(limit)
@@ -43,6 +44,9 @@ class DocumentDatastore
       save(index + offset.to_s, new_index_value)
       if remaining_index_value != nil
         save(index + (offset + 1).to_s, remaining_index_value)
+        @offset_cache[index] = offset + 1
+      else
+        @offset_cache[index] = offset
       end
     end
   end
@@ -59,16 +63,18 @@ class DocumentDatastore
   end
 
   def get_current_hash(index)
-    offset = 0
-    # get the current entity if it exists
-    while true
-      entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
-      entity = @@datastore.find(entity_key)
-      break if entity == nil
-      offset += 1
+    if @offset_cache.key?(index)
+      offset = @offset_cache[index]
+    else
+      offset = 0
+      while true
+        entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
+        entity = @@datastore.find(entity_key)
+        break if entity == nil
+        offset += 1
+      end
+      offset -= 1 if offset > 0
     end
-
-    offset -= 1 if offset > 0
     entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
     entity = @@datastore.find(entity_key)
 
