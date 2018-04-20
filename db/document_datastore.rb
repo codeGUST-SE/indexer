@@ -4,8 +4,10 @@ require_relative 'document_entity'
 # DocumentDatastore connects to the Datastore in Google Cloud Platform.
 class DocumentDatastore
 
+  MAX_URL_LIST = 4000
+
   DOCUMENT_KIND = {'DEV' => 'page_dev', 'PROD' => 'page'}
-  INDEX_KIND = {'DEV' => 'index_dev', 'PROD' => 'index'}
+  INDEX_KIND = {'DEV' => 'in_dev', 'PROD' => 'index'}
 
   def initialize(env)
     @@datastore ||= Google::Cloud::Datastore.new(project_id: 'codegust')
@@ -34,26 +36,67 @@ class DocumentDatastore
 
   def add_indexes(index_hash)
     index_hash.each_key do |index|
-      # get the current entity if it exists
-      entity_key = @@datastore.key @index_kind, index
-      entity = @@datastore.find(entity_key)
-      current_hash = entity == nil ? {} : eval(entity['value'])
+      current_hash, offset = get_current_hash(index)
 
-      # create new entity or update the existing one
-      new_entity = @@datastore.entity @index_kind, index do |t|
-        t['value'] = compute_index_value(current_hash, index_hash[index])
-        t.exclude_from_indexes! 'value', true
+      new_index_value, remaining_index_value = compute_index_value(current_hash, index_hash[index])
+
+      save(index + offset.to_s, new_index_value)
+      if remaining_index_value != nil
+        save(index + (offset + 1).to_s, remaining_index_value)
       end
-      @@datastore.save new_entity
     end
   end
 
   private
 
+  def save(index, value)
+    # create new entity or update the existing one
+    new_entity = @@datastore.entity @index_kind, index do |t|
+      t['value'] = value
+      t.exclude_from_indexes! 'value', true
+    end
+    @@datastore.save new_entity
+  end
+
+  def get_current_hash(index)
+    offset = 0
+    # get the current entity if it exists
+    while true
+      entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
+      entity = @@datastore.find(entity_key)
+      break if entity == nil
+      offset += 1
+    end
+
+    offset -= 1 if offset > 0
+    entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
+    entity = @@datastore.find(entity_key)
+
+    current_hash = entity == nil ? {} : eval(entity['value'])
+    return current_hash, offset
+  end
+
   # Computes the new index value given the current_hash and the new_hash.
-  # TODO: Implement top k pruning
   def compute_index_value(current_hash, new_hash)
-    current_hash.merge(new_hash).to_s
+    curr_size = current_hash.size
+    new_size = new_hash.size
+
+    if curr_size + new_size > MAX_URL_LIST
+      result_hash = current_hash
+      remaining_hash = {}
+      i = curr_size
+      new_hash.each do |key, value|
+        if i < MAX_URL_LIST
+          result_hash[key] = value
+        else
+          remaining_hash[key] = value
+        end
+        i += 1
+      end
+      return result_hash.to_s, remaining_hash.to_s
+    else
+      return current_hash.merge(new_hash).to_s, nil
+    end
   end
 
 end
