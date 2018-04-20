@@ -1,6 +1,6 @@
 require 'google/cloud/datastore'
 require_relative 'document_entity'
-require_relative 'log/log'
+require_relative '../log/log'
 
 # DocumentDatastore connects to the Datastore in Google Cloud Platform.
 class DocumentDatastore
