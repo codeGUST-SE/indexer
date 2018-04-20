@@ -24,7 +24,6 @@ class DocumentDatastore
     Log::LOGGER.info('datastore') { "Query with largest_timestamp = #{@largest_timestamp}" }
     documents = []
     query = @@datastore.query(@document_kind)
-                         .where('timestamp', '>=', 1524223642)
                          .where('timestamp', '<', @largest_timestamp)
                          .order('timestamp', :desc)
                          .limit(limit)
