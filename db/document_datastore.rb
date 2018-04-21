@@ -41,6 +41,7 @@ class DocumentDatastore
       Log::LOGGER.info('datastore') { "Adding index = #{index}" }
 
       current_hash, offset = get_current_hash(index)
+      next if current_hash == nil
       new_index_value, remaining_index_value = compute_index_value(current_hash, index_hash[index])
 
       save(index + offset.to_s, new_index_value)
@@ -57,9 +58,13 @@ class DocumentDatastore
 
   def save(index, value)
     # create new entity or update the existing one
-    new_entity = @@datastore.entity @index_kind, index do |t|
-      t['value'] = value
-      t.exclude_from_indexes! 'value', true
+    begin
+      new_entity = @@datastore.entity @index_kind, index do |t|
+        t['value'] = value
+        t.exclude_from_indexes! 'value', true
+      end
+    rescue   # Key longer than 1500 bytes
+      return
     end
 
     while true
@@ -78,7 +83,11 @@ class DocumentDatastore
     else
       offset = 0
       while true
-        entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
+        begin
+          entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
+        rescue   # key longer than 1500
+          return nil, nil
+        end
         entity = @@datastore.find(entity_key)
         break if entity == nil
         offset += 1
