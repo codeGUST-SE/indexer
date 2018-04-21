@@ -5,7 +5,7 @@ require_relative '../log/log'
 # DocumentDatastore connects to the Datastore in Google Cloud Platform.
 class DocumentDatastore
 
-  MAX_URL_LIST = 3000
+  MAX_URL_LIST = 2000
 
   DOCUMENT_KIND = {'DEV' => 'page_dev', 'PROD' => 'page'}
   INDEX_KIND = {'DEV' => 'index_dev', 'PROD' => 'index'}
@@ -15,7 +15,7 @@ class DocumentDatastore
     @env = env
     @document_kind = DOCUMENT_KIND[@env]
     @index_kind = INDEX_KIND[@env]
-    @largest_timestamp = Time.now.to_i
+    @largest_timestamp = 1524070873
     @offset_cache = {}  # TODO not threadsafe :(
     Log::LOGGER.info('datastore') { "Initialized with largest_timestamp = #{@largest_timestamp}" }
   end
@@ -67,7 +67,7 @@ class DocumentDatastore
         @@datastore.save new_entity
         break
       rescue # Deadline exceeded
-        sleep(1.minute)
+        sleep(30)
       end
     end
   end
