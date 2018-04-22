@@ -38,7 +38,7 @@ class DocumentDatastore
 
   def add_indexes(index_hash)
     index_hash.each_key do |index|
-      Log::LOGGER.info('datastore') { "Adding index = #{index}" }
+      Log::LOGGER.info('datastore') { "Trying index = #{index}" }
 
       current_hash, offset = get_current_hash(index)
       next if current_hash == nil
@@ -51,6 +51,7 @@ class DocumentDatastore
       else
         @offset_cache[index] = offset
       end
+      Log::LOGGER.info('datastore') { "Succeeded index = #{index}" }
     end
   end
 
