@@ -80,10 +80,10 @@ class DocumentDatastore
   end
 
   def get_current_hash(index)
+    offset = 0
     if @offset_cache.key?(index)
       offset = @offset_cache[index]
     else
-      offset = 0
       while true
         begin
           entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
@@ -97,8 +97,14 @@ class DocumentDatastore
       end
       offset -= 1 if offset > 0
     end
-    entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
-    entity = @@datastore.find(entity_key)
+
+    begin
+      entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
+      entity = @@datastore.find(entity_key)
+    rescue
+      Log::LOGGER.debug('datastore') { "Index = #{index} threw and excetion C" }
+      return nil, nil
+    end
 
     current_hash = entity == nil ? {} : eval(entity['value'])
     return current_hash, offset
