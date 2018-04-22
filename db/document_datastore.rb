@@ -64,6 +64,7 @@ class DocumentDatastore
         t.exclude_from_indexes! 'value', true
       end
     rescue   # Key longer than 1500 bytes
+      Log::LOGGER.debug('datastore') { "Index = #{index} threw and excetion A" }
       return
     end
 
@@ -72,6 +73,7 @@ class DocumentDatastore
         @@datastore.save new_entity
         break
       rescue # Deadline exceeded
+        Log::LOGGER.debug('datastore') { "Deadline exceeded" }
         sleep(30)
       end
     end
@@ -85,10 +87,11 @@ class DocumentDatastore
       while true
         begin
           entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
+          entity = @@datastore.find(entity_key)
         rescue   # key longer than 1500
+          Log::LOGGER.debug('datastore') { "Index = #{index} threw and excetion B" }
           return nil, nil
         end
-        entity = @@datastore.find(entity_key)
         break if entity == nil
         offset += 1
       end
