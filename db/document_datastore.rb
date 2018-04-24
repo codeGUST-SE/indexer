@@ -15,8 +15,7 @@ class DocumentDatastore
     @env = env
     @document_kind = DOCUMENT_KIND[@env]
     @index_kind = INDEX_KIND[@env]
-    @largest_timestamp = 1524070873
-    @offset_cache = {}  # TODO not threadsafe :(
+    @largest_timestamp = Time.now.to_i
     Log::LOGGER.info('datastore') { "Initialized with largest_timestamp = #{@largest_timestamp}" }
   end
 
@@ -38,20 +37,12 @@ class DocumentDatastore
 
   def add_indexes(index_hash)
     index_hash.each_key do |index|
-      Log::LOGGER.info('datastore') { "Trying index = #{index}" }
-
       current_hash, offset = get_current_hash(index)
       next if current_hash == nil
       new_index_value, remaining_index_value = compute_index_value(current_hash, index_hash[index])
 
       save(index + offset.to_s, new_index_value)
-      if remaining_index_value != nil
-        save(index + (offset + 1).to_s, remaining_index_value)
-        @offset_cache[index] = offset + 1
-      else
-        @offset_cache[index] = offset
-      end
-      Log::LOGGER.info('datastore') { "Succeeded index = #{index}" }
+      save(index + (offset + 1).to_s, remaining_index_value) if remaining_index_value != nil
     end
   end
 
@@ -82,22 +73,18 @@ class DocumentDatastore
 
   def get_current_hash(index)
     offset = 0
-    if @offset_cache.key?(index)
-      offset = @offset_cache[index]
-    else
-      while true
-        begin
-          entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
-          entity = @@datastore.find(entity_key)
-        rescue   # key longer than 1500
-          Log::LOGGER.debug('datastore') { "Index = #{index} threw and excetion B" }
-          return nil, nil
-        end
-        break if entity == nil
-        offset += 1
+    while true
+      begin
+        entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
+        entity = @@datastore.find(entity_key)
+      rescue   # key longer than 1500
+        Log::LOGGER.debug('datastore') { "Index = #{index} threw and excetion B" }
+        return nil, nil
       end
-      offset -= 1 if offset > 0
+      break if entity == nil
+      offset += 1
     end
+    offset -= 1 if offset > 0
 
     begin
       entity_key = @@datastore.key @index_kind, "#{index}#{offset}"
